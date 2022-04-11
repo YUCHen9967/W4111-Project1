@@ -44,9 +44,30 @@ def teardown_request(exception):
 
 
 @app.route('/')
-def hello_world():  # put application's code here
-    return 'Hello World!'
+def home():  # put application's code here
+    return render_template("home.html")
+@app.route('/movies')
+def Movies():
+    cursor = g.conn.execute("SELECT * FROM MOVIES AS M ORDER BY M.mid")
+    movies = []
+    for result in cursor:
+      movies.append(result[mid])  # can also be accessed using result[0]
+    cursor.close()
 
+    context = dict(data=movies)
+    return render_template("Movies.html",**context)
+@app.route('/celebrity')
+def Celebrity():
+  return render_template("celebrity.html")
+@app.route('/login')
+def login():
+  return render_template("login.html")
+@app.route('/user')
+def user():
+  return render_template("user.html")
+@app.route('/admin')
+def admin():
+  return render_template("admin.html")
 
 if __name__ == '__main__':
     app.run()
