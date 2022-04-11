@@ -13,7 +13,7 @@
   <div>
     {% set link = '' %}
     {% for n in data %}
-    {% set link = 'movies/' + n %}
+    {% set link = 'star/' + n %}
     {% set link = link.replace(" ", "%20") %}
     <div><a href={{link}}>{{n}}</a></div>
     {% endfor %}
