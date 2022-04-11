@@ -12,7 +12,7 @@ DB_PASSWORD = "6713"
 
 DB_SERVER = "w4111.cisxo09blonu.us-east-1.rds.amazonaws.com"
 
-DATABASEURI = "postgresql://"+DB_USER+":"+DB_PASSWORD+"@"+DB_SERVER+"/w4111"
+DATABASEURI = "postgresql://"+DB_USER+":"+DB_PASSWORD+"@"+DB_SERVER+"/proj1part2"
 
 engine = create_engine(DATABASEURI)
 
@@ -48,17 +48,68 @@ def home():  # put application's code here
     return render_template("home.html")
 @app.route('/movies')
 def Movies():
-    cursor = g.conn.execute("SELECT * FROM MOVIES AS M ORDER BY M.mid")
+    cursor = g.conn.execute("SELECT * FROM MOVIES AS M ")
     movies = []
     for result in cursor:
-      movies.append(result[mid])  # can also be accessed using result[0]
+      movies.append(result['name'])  # can also be accessed using result[0]
     cursor.close()
 
     context = dict(data=movies)
     return render_template("Movies.html",**context)
+
+
+@app.route('/movies/<name>')
+def movie(name):
+    query = "SElECT * FROM Movies AS m WHERE m.name= '{0}'".format(
+        name)
+    cursor = g.conn.execute(query)
+    movieTitle = ""
+    movieDetail = 0
+    movieStoryline = 0
+    moviegenre= 0
+    movieid=0
+
+
+    for result in cursor:
+        movieTitle = result['name']
+        movieDetail = result["details"]
+        movieStoryline = result["storyline"]
+        moviegenre= result['genre']
+        movieid=result['mid']
+    cursor.close()
+
+    movierate = ""
+    query="SELECT round(avg(UR.rate),1) AS rate FROM User_rate AS UR WHERE UR.mid='{0}'".format(movieid)
+    cursor = g.conn.execute(query)
+    for result in cursor:
+        movierate= result['rate']
+    cursor.close()
+
+    query = "SELECT C1.name FROM Celebrity AS C1, (SELECT celeid FROM Act AS A WHERE A.mid='{0}') AS C2 WHERE C1.celeid=C2.celeid".format(movieid)
+    cursor = g.conn.execute(query)
+    actors = []
+    cursor = g.conn.execute(query)
+    for result in cursor:
+        actors.append(result[0])
+    cursor.close()
+    return render_template("movie.html", title=movieTitle, Detail=movieDetail,
+                           Storyline=movieStoryline,actors=actors,
+                           genre=moviegenre,rate=movierate)
+
+
+
+
+
 @app.route('/celebrity')
 def Celebrity():
-  return render_template("celebrity.html")
+    cursor = g.conn.execute("SELECT * FROM Celebrity ")
+    Celebrity = []
+    for result in cursor:
+        Celebrity.append(result['name'])  # can also be accessed using result[0]
+    cursor.close()
+
+    context = dict(data=movies)
+    return render_template("celebrity.html",**context)
 @app.route('/login')
 def login():
   return render_template("login.html")
