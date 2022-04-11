@@ -1,0 +1,49 @@
+<html>
+  <style>
+    body{
+      font-size: 15pt;
+      font-family: arial;
+    }
+  </style>
+
+<nav>
+  <ul>
+    {% if g.user %}
+      <li><span>{{ g.user['username'] }}</span>
+      <li><a href="logout">Log Out</a>
+    {% else %}
+      <li><a href="register">Register</a>
+      <li><a href="login">Log In</a>
+    {% endif %}
+  </ul>
+</nav>
+
+<body>
+<!--
+  <h1>Some famous Computer Scientists</h1>
+  <div>{{data}}</div>
+
+  <div>
+    {% for n in data %}
+    <div>{{n}}</div>
+    {% endfor %}
+  </div>
+-->
+
+<h1>Movie Database</h1>
+
+<p><a href="movies">See Movies</a></p>
+<p><a href="celebrity">See Celebrity</a></p>
+
+
+
+
+<h2> Search bar... ** CURRENTLY UNDER CONSTRUCTION ** </h2>
+<form method="POST" action="/add"> <!-- this should be /search but we will add this functionality later -->
+<p>Search movie, genre, movie, director or actor by name: <input type="text" name="name"> <input type="submit" value="Search"></p>
+</form>
+
+</body>
+
+
+</html>
