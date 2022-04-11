@@ -108,8 +108,27 @@ def Celebrity():
         Celebrity.append(result['name'])  # can also be accessed using result[0]
     cursor.close()
 
-    context = dict(data=movies)
+    context = dict(data=Celebrity)
     return render_template("celebrity.html",**context)
+
+@app.route('/star/<name>')
+def star(name):
+    query = "SElECT * FROM Celebrity AS c WHERE c.name= '{0}'".format(
+        name)
+    cursor = g.conn.execute(query)
+    celebrityname= ""
+    detail = 0
+
+    for result in cursor:
+        celebrityname = result['name']
+        detail = result["details"]
+
+    cursor.close()
+    return render_template("star.html",name=celebrityname,Detail=detail)
+
+
+
+
 @app.route('/login')
 def login():
   return render_template("login.html")
