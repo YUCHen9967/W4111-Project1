@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+  <h1>Movies_collection</h1>
+
+  <div>
+    {% set link = '' %}
+    {% for n in data %}
+    {% set link = 'movies/' + n %}
+    {% set link = link.replace(" ", "%20") %}
+    <div><a href={{link}}>{{n}}</a></div>
+    {% endfor %}
+
+  <p><a href="add_collection">Add your movie collection!</a></p>
+  <p><a href="searchmovie">Search Movie!</a></p>
+  <p><a href="searchcele">Search Celebrity!</a></p>
+</body>
+
+</html>
