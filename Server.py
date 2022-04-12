@@ -149,7 +149,15 @@ def star(name):
     cursor.close()
     return render_template("star.html",name=celebrityname,Detail=detail)
 
-
+@app.route('/News')
+def News():
+    cursor = g.conn.execute("SELECT * FROM Movie_news ")
+    title=[]
+    for result in cursor:
+        title.append(result['title'])  # can also be accessed using result[0]
+    cursor.close()
+    context = dict(data=title)
+    return render_template("news.html", **context)
 
 
 @app.route('/login')
