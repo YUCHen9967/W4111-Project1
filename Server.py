@@ -229,6 +229,46 @@ def searchmovie():
                                genre=moviegenre, rate=movierate, comments=Comment, Username=Username)
     return render_template("search.html")
 
+@app.route('/rate',methods=('GET', 'POST'))
+def rate():
+    if request.method == 'POST':
+        email = request.form['email']
+        movietitle=request.form['movie']
+        rate=request.form['rate']
+        error = None
+        query1 = "SELECT COUNT(*) FROM Users WHERE email = '{0}'".format(email)
+        query2 = "SELECT COUNT(*) FROM MOVIES WHERE Name = '{0}'".format(movietitle)
+        usercheck = g.conn.execute(query1).fetchone()[0]
+        moviecheck = g.conn.execute(query2).fetchone()[0]
+        if usercheck <1:
+            error = 'User is already registered.'
+            return render_template('wrong.html')
+        if moviecheck ==1:
+            error= 'Movie has been submitted.'
+            return render_template('wronguser.html')
+        if rate<1 or rate >10:
+            error="wrong rate"
+            return render_template('wrongrate.html')
+        query3 = "SELECT mid FROM MOVIES WHERE Name='{0}'".format(movietitle)
+        query4 = "SELECT aid FROM Users WHERE email = '{0}'".format(email)
+        mid = 0
+        userid = 0
+        cursor = g.conn.execute(query4)
+        for result in cursor:
+            userid = result[0]
+        cursor.close()
+
+        cursor = g.conn.execute(query3)
+
+        for result in cursor:
+            mid = result[0]
+        cursor.close()
+        if error is None:
+            query="INSERT INTO User_rate(userid, mid, rate) VALUES ('{0}','{1}','{2}')".format(userid,mid,rate)
+            g.conn.execute(query)
+            return redirect(request.referrer)
+    return render_template("rate.html")
+
 @app.route('/wrong')
 def wrong():
     return render_template("wrong.html")
