@@ -378,7 +378,7 @@ def star(name):
     cursor.close()
     return render_template("star.html", name=celebrityname, Detail=detail)
 
-@app.route('/add_movies',method=('GET', 'POST'))
+@app.route('/add_movies',methods=('GET','POST'))
 def add_movies():
     if request.method == 'POST':
         email = request.form['email']
@@ -422,10 +422,10 @@ def add_movies():
             g.conn.execute(query5)
             g.conn.execute(query6)
 
-            return redirect(request.referrer)
+            return redirect('/')
     return render_template("add_movies.html")
 
-@app.route('/add_celebrity',method=('GET', 'POST'))
+@app.route('/add_celebrity',methods=('GET','POST'))
 def add_celebrity():
     if request.method == 'POST':
         email = request.form['email']
@@ -476,10 +476,46 @@ def add_celebrity():
             g.conn.execute(query)
             query="INSERT INTO Adjust_celebrity(aid,celeid) VALUES('{0}','{1}')".format(aid, cid)
             g.conn.execute(query)
-            return redirect(request.referrer)
+            return redirect('/')
     return render_template('add_celebrity.html')
 
+@app.route('/add_News',methods=('GET','POST'))
+def add_News():
+    if request.method == 'POST':
+        email = request.form['email']
+        news = request.form['news']
+        error = None
+        query1 = "SELECT COUNT(*) FROM Admin WHERE email = '{0}'".format(email)
+        query2 = "SELECT COUNT(*) FROM Movie_news WHERE title = '{0}'".format(news)
+        usercheck = g.conn.execute(query1).fetchone()[0]
+        newscheck = g.conn.execute(query2).fetchone()[0]
+        if usercheck < 1:
+            error = 'User is already registered.'
+            return render_template('wrong.html')
+        if celebritycheck == 1:
+            error = 'News has been submitted.'
+            return render_template('newssubmitted.html')
+        query3 = "SELECT COUNT(*) FROM Movie_news"
+        query4 = "SELECT aid FROM Admin WHERE email = '{0}'".format(email)
+        mnid=0
+        cursor = g.conn.execute(query3)
+        for result in cursor:
+            mnid = result[0]
+        cursor.close()
+        mnid=mnid+1
 
+        aid=0
+        cursor = g.conn.execute(query4)
+        for result in cursor:
+            aid = result[0]
+        cursor.close()
+        if error is None:
+            query="INSERT INTO Movie_news(mnid, title) VALUES ('{0}','{1}')".format(mnid,news)
+            g.conn.execute(query)
+            query="INSERT INTO adjust_Movie_news(aid, mnid) VALUES ('{0}','{1}')".format(aid,mnid)
+            g.conn.execute(query)
+            return redirect('/')
+    return render_template("add_news.html")
 
 if __name__ == '__main__':
     app.run()
