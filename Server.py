@@ -46,6 +46,28 @@ def teardown_request(exception):
 @app.route('/')
 def home():  # put application's code here
     return render_template("home.html")
+  
+def login():
+    if request.method == 'POST':
+        username = request.form['email']
+        query = "SELECT * FROM Users AS U WHERE U.email = '{}'".format(username)
+        user = g.conn.execute(query).fetchone()
+
+        if user is None:
+            query = "SELECT * FROM admin AS a WHERE a.email = '{}'".format(username)
+            admin = g.conn.execute(query).fetchone()
+            if admin is None:
+                return redirect('/wrong')
+            else:
+                return redirect('/')
+        else:
+            return redirect('/')
+    return render_template("login.html")
+@app.route('/wrong')
+def wrong():
+    return render_template("wrong.html")
+  
+  
 @app.route('/movies')
 def Movies():
     cursor = g.conn.execute("SELECT * FROM MOVIES AS M ")
