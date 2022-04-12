@@ -378,7 +378,7 @@ def star(name):
     cursor.close()
     return render_template("star.html", name=celebrityname, Detail=detail)
 
-@app.route('/add_movies')
+@app.route('/add_movies',method=('GET', 'POST'))
 def add_movies():
     if request.method == 'POST':
         email = request.form['email']
@@ -399,16 +399,16 @@ def add_movies():
             error= 'Movie has been submitted.'
             return render_template('moviesubmitted.html')
         query3 = "SELECT COUNT(*) FROM MOVIES"
-        query4 = "SELECT mid FROM MOVIES WHERE Name = '{0}'".format(movietitle)
+        query4 = "SELECT aid FROM Admin WHERE email = '{0}'".format(email)
 
         mid=0
         aid=0
-        cursor = g.conn.execute(query3)
+        cursor = g.conn.execute(query4)
         for result in cursor:
             aid=result[0]
         cursor.close()
 
-        cursor = g.conn.execute(query4)
+        cursor = g.conn.execute(query3)
 
         for result in cursor:
             mid=result[0]
@@ -418,13 +418,66 @@ def add_movies():
 
         if error is None:
             query5 = "INSERT INTO adjust_Movie (aid,mid) VALUES ('{0}','{1}')".format(aid,mid)
-            query6="INSERT INTO MOVIES (mid,Name,Details,Genre,Storyline) VALUES ('{0}','{1}',{2},{3},{4})".format(mid,movietitle,movieDetail,moviegenre,movieStoryline)
+            query6="INSERT INTO MOVIES (mid,Name,Details,Genre,Storyline) VALUES ('{0}','{1}','{2}','{3}','{4}')".format(mid,movietitle,movieDetail,moviegenre,movieStoryline)
             g.conn.execute(query5)
             g.conn.execute(query6)
 
             return redirect(request.referrer)
     return render_template("add_movies.html")
 
+@app.route('/add_celebrity',method=('GET', 'POST'))
+def add_celebrity():
+    if request.method == 'POST':
+        email = request.form['email']
+        movietitle = request.form['movie']
+        name = request.form["name"]
+        detail = request.form["detail"]
+        error=None
+        query1 = "SELECT COUNT(*) FROM Admin WHERE email = '{0}'".format(email)
+        query2 = "SELECT COUNT(*) FROM Celebrity WHERE name = '{0}'".format(name)
+        usercheck = g.conn.execute(query1).fetchone()[0]
+        celebritycheck = g.conn.execute(query2).fetchone()[0]
+        if usercheck < 1:
+            error = 'User is already registered.'
+            return render_template('wrong.html')
+        if celebritycheck == 1:
+            error = 'Movie has been submitted.'
+            return render_template('moviesubmitted.html')
+        query3 = "SELECT COUNT(*) FROM Celebrity"
+        query4 = "SELECT aid FROM Admin WHERE email = '{0}'".format(email)
+        cid=0
+        cursor = g.conn.execute(query3)
+        for result in cursor:
+            cid = result[0]
+        cursor.close()
+        cid=cid+1
+
+        aid=0
+        cursor = g.conn.execute(query4)
+        for result in cursor:
+            aid = result[0]
+        cursor.close()
+        query5="SELECT mid FROM MOVIES WHERE Name='{0}'".format(movietitle)
+        mid=0
+        cursor = g.conn.execute(query4)
+        for result in cursor:
+            mid = result[0]
+        cursor.close()
+
+        query6 = "SELECT COUNT(*) FROM MOVIES WHERE Name = '{0}'".format(movietitle)
+        moviecheck = g.conn.execute(query6).fetchone()[0]
+        if moviecheck<1:
+            error = 'User is already registered.'
+            return render_template('wronguser.html')
+        if error is None:
+            query="INSERT INTO Celebrity(celeid, name, details) VALUES ('{0}','{1}','{2}')".format(cid,name,detail)
+            g.conn.execute(query)
+            query = "INSERT INTO Act(mid, celeid) VALUES ('{0}','{1}')".format(mid, cid)
+            g.conn.execute(query)
+            query="INSERT INTO Adjust_celebrity(aid,celeid) VALUES('{0}','{1}')".format(aid, cid)
+            g.conn.execute(query)
+            return redirect(request.referrer)
+    return render_template('add_celebrity.html')
 
 
 
