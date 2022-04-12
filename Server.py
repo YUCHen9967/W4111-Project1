@@ -1,7 +1,8 @@
 import os
 from sqlalchemy import *
 from sqlalchemy.pool import NullPool
-from flask import Flask, request, render_template, g, redirect, Response
+from flask import Flask, request, render_template, g, redirect, Response,flash
+from sqlalchemy.testing import db
 
 tmpl_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'templates')
 app = Flask(__name__, template_folder=tmpl_dir)
@@ -12,42 +13,45 @@ DB_PASSWORD = "6713"
 
 DB_SERVER = "w4111.cisxo09blonu.us-east-1.rds.amazonaws.com"
 
-DATABASEURI = "postgresql://"+DB_USER+":"+DB_PASSWORD+"@"+DB_SERVER+"/proj1part2"
+DATABASEURI = "postgresql://" + DB_USER + ":" + DB_PASSWORD + "@" + DB_SERVER + "/proj1part2"
 
 engine = create_engine(DATABASEURI)
 
+
 @app.before_request
 def before_request():
-  """
-  This function is run at the beginning of every web request
-  (every time you enter an address in the web browser).
-  We use it to setup a database connection that can be used throughout the request
-  The variable g is globally accessible
-  """
-  try:
-    g.conn = engine.connect()
-  except:
-    print("uh oh, problem connecting to database")
-    import traceback; traceback.print_exc()
-    g.conn = None
+    """
+    This function is run at the beginning of every web request
+    (every time you enter an address in the web browser).
+    We use it to setup a database connection that can be used throughout the request
+    The variable g is globally accessible
+    """
+    try:
+        g.conn = engine.connect()
+    except:
+        print("uh oh, problem connecting to database")
+        import traceback;
+        traceback.print_exc()
+        g.conn = None
+
 
 @app.teardown_request
 def teardown_request(exception):
-  """
-  At the end of the web request, this makes sure to close the database connection.
-  If you don't the database could run out of memory!
-  """
-  try:
-    g.conn.close()
-  except Exception as e:
-    pass
+    """
+    At the end of the web request, this makes sure to close the database connection.
+    If you don't the database could run out of memory!
+    """
+    try:
+        g.conn.close()
+    except Exception as e:
+        pass
 
 
 @app.route('/')
 def home():  # put application's code here
     return render_template("home.html")
-  
-@app.route('/login', methods=('GET', 'POST'))  
+
+@app.route('/login', methods=('GET', 'POST'))
 def login():
     if request.method == 'POST':
         username = request.form['email']
@@ -64,21 +68,23 @@ def login():
         else:
             return redirect('/')
     return render_template("login.html")
+
+
 @app.route('/wrong')
 def wrong():
     return render_template("wrong.html")
-  
-  
+
+
 @app.route('/movies')
 def Movies():
     cursor = g.conn.execute("SELECT * FROM MOVIES AS M ")
     movies = []
     for result in cursor:
-      movies.append(result['name'])  # can also be accessed using result[0]
+        movies.append(result['name'])  # can also be accessed using result[0]
     cursor.close()
 
     context = dict(data=movies)
-    return render_template("Movies.html",**context)
+    return render_template("Movies.html", **context)
 
 
 @app.route('/movies/<name>')
@@ -115,7 +121,7 @@ def movie(name):
     for result in cursor:
         actors.append(result[0])
     cursor.close()
-    query = "SELECT U.username, UC.comment FROM Users AS U, User_comment AS UC WHERE UC.mid='{0}' AND U.userid=UC.userid".format(
+    query = "SELECT DISTINCT U.username, UC.comment FROM Users AS U, User_comment AS UC WHERE UC.mid='{0}' AND U.userid=UC.userid".format(
         movieid)
     cursor = g.conn.execute(query)
     Comment = []
@@ -129,9 +135,53 @@ def movie(name):
                            Storyline=movieStoryline, actors=actors,
                            genre=moviegenre, rate=movierate,comments=Comment,Username=Username)
 
+@app.route('/movies/comment',methods=('GET', 'POST'))
+def comment():
+    if request.method == 'POST':
+        email = request.form['email']
+        movietitle=request.form['movie']
+        comment=request.form['comment']
+        error=None
 
+        query1 = "SELECT COUNT(*) FROM Users WHERE email = '{0}'".format(email)
+        query2 = "SELECT COUNT(*) FROM MOVIES WHERE Name = '{0}'".format(movietitle)
+        usercheck=g.conn.execute(query1).fetchone()
+        moviecheck=g.conn.execute(query2).fetchone()
+        if usercheck is None:
+            error = 'User is already registered.'
+            return render_template('wrong.html')
+        elif moviecheck is None:
+            error = 'No such movie.'
+            return render_template('wronguser.html')
 
+        query3 = "SELECT userid FROM Users WHERE email = '{0}'".format(email)
+        query4 = "SELECT mid FROM MOVIES WHERE Name = '{0}'".format(movietitle)
+        query5 = "SELECT count(*) FROM User_comment "
+        mid=0
+        userid=0
+        cursor = g.conn.execute(query3)
+        for result in cursor:
+            print(result)
+            userid=result[0]
+        cursor.close()
+        cursor = g.conn.execute(query4)
+        for result in cursor:
+            mid=result[0]
+        cursor.close()
+        cid=0
+        cursor = g.conn.execute(query5)
+        for result in cursor:
+            cid=result[0]
+        cursor.close()
+        cid=cid+1
+        print(cid,userid,mid)
+        if error is None:
+            query = "INSERT INTO User_comment (cid, userid, mid, comment) VALUES ('{0}','{1}','{2}','{3}')".format(
+                cid, userid, mid, comment)
+            g.conn.execute(query)
+            return redirect('/')
 
+    return render_template('comment.html')
 @app.route('/celebrity')
 def Celebrity():
     cursor = g.conn.execute("SELECT * FROM Celebrity ")
@@ -141,22 +191,7 @@ def Celebrity():
     cursor.close()
 
     context = dict(data=Celebrity)
-    return render_template("celebrity.html",**context)
-
-@app.route('/star/<name>')
-def star(name):
-    query = "SElECT * FROM Celebrity AS c WHERE c.name= '{0}'".format(
-        name)
-    cursor = g.conn.execute(query)
-    celebrityname= ""
-    detail = 0
-
-    for result in cursor:
-        celebrityname = result['name']
-        detail = result["details"]
-
-    cursor.close()
-    return render_template("star.html",name=celebrityname,Detail=detail)
+    return render_template("celebrity.html", **context)
 
 @app.route('/News')
 def News():
@@ -168,13 +203,35 @@ def News():
     context = dict(data=title)
     return render_template("news.html", **context)
 
+@app.route('/star/<name>')
+def star(name):
+    query = "SElECT * FROM Celebrity AS c WHERE c.name= '{0}'".format(
+        name)
+    cursor = g.conn.execute(query)
+    celebrityname = ""
+    detail = 0
+
+    for result in cursor:
+        celebrityname = result['name']
+        detail = result["details"]
+
+    cursor.close()
+    return render_template("star.html", name=celebrityname, Detail=detail)
 
 @app.route('/user')
 def user():
-  return render_template("user.html")
+    cursor = g.conn.execute("SELECT * FROM MOVIES AS M ")
+    movies = []
+    for result in cursor:
+        movies.append(result['name'])  # can also be accessed using result[0]
+    cursor.close()
+    return render_template("user.html")
+
+
 @app.route('/admin')
 def admin():
-  return render_template("admin.html")
+    return render_template("admin.html")
+
 
 if __name__ == '__main__':
     app.run()
