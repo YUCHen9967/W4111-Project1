@@ -47,6 +47,7 @@ def teardown_request(exception):
 def home():  # put application's code here
     return render_template("home.html")
   
+@app.route('/login', methods=('GET', 'POST'))  
 def login():
     if request.method == 'POST':
         username = request.form['email']
