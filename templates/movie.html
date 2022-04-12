@@ -9,7 +9,7 @@
 
 <body>
 	<h1>{{title}}</h1>
-	<h3>Detail: {{Detail}}</h3>
+	<h2>Detail: {{Detail}}</h2>
     <h3>Storyline: {{Storyline}}</h3>
 	<h3>Genre: {{genre}}</h3>
 	<h3>Actors:</h3>
@@ -18,10 +18,12 @@
 	{% endfor %}
 
 	<h3>Rate: {{rate}}</h3>
-	<h3>Comments: </h3>
+    <h3>Comments: </h3>
  	{%for i in range(comments|count):%}
 	<h3>User:{{Username[i]}}<br>Comment:{{comments[i]}}</h3>
 	{% endfor %}
+
+<p><a href="comment">Make your comments</a></p>
 
 </body>
 
