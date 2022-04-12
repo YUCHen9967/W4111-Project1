@@ -89,36 +89,45 @@ def movie(name):
     movieTitle = ""
     movieDetail = 0
     movieStoryline = 0
-    moviegenre= 0
-    movieid=0
-
+    moviegenre = 0
+    movieid = 0
 
     for result in cursor:
         movieTitle = result['name']
         movieDetail = result["details"]
         movieStoryline = result["storyline"]
-        moviegenre= result['genre']
-        movieid=result['mid']
+        moviegenre = result['genre']
+        movieid = result['mid']
     cursor.close()
 
     movierate = ""
-    query="SELECT round(avg(UR.rate),1) AS rate FROM User_rate AS UR WHERE UR.mid='{0}'".format(movieid)
+    query = "SELECT round(avg(UR.rate),1) AS rate FROM User_rate AS UR WHERE UR.mid='{0}'".format(movieid)
     cursor = g.conn.execute(query)
     for result in cursor:
-        movierate= result['rate']
+        movierate = result['rate']
     cursor.close()
 
-    query = "SELECT C1.name FROM Celebrity AS C1, (SELECT celeid FROM Act AS A WHERE A.mid='{0}') AS C2 WHERE C1.celeid=C2.celeid".format(movieid)
+    query = "SELECT C1.name FROM Celebrity AS C1, (SELECT celeid FROM Act AS A WHERE A.mid='{0}') AS C2 WHERE C1.celeid=C2.celeid".format(
+        movieid)
     cursor = g.conn.execute(query)
     actors = []
     cursor = g.conn.execute(query)
     for result in cursor:
         actors.append(result[0])
     cursor.close()
+    query = "SELECT U.username, UC.comment FROM Users AS U, User_comment AS UC WHERE UC.mid='{0}' AND U.userid=UC.userid".format(
+        movieid)
+    cursor = g.conn.execute(query)
+    Comment = []
+    Username=[]
+    cursor = g.conn.execute(query)
+    for result in cursor:
+        Username.append(result[0])
+        Comment.append(result[1])
+    cursor.close()
     return render_template("movie.html", title=movieTitle, Detail=movieDetail,
-                           Storyline=movieStoryline,actors=actors,
-                           genre=moviegenre,rate=movierate)
-
+                           Storyline=movieStoryline, actors=actors,
+                           genre=moviegenre, rate=movierate,comments=Comment,Username=Username)
 
 
 
