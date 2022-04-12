@@ -56,15 +56,15 @@ def login():
     if request.method == 'POST':
         email = request.form['email']
         print(email)
-        query = "SELECT * FROM Users AS U WHERE U.email = '{}'".format(email)
-        user = g.conn.execute(query).fetchone()
-        if user is None:
-            query = "SELECT * FROM admin AS a WHERE a.email = '{0}'".format(email)
-            admin = g.conn.execute(query).fetchone()
-            if admin is None:
+        query = "SELECT COUNT(*) FROM Users AS U WHERE U.email = '{}'".format(email)
+        user = g.conn.execute(query).fetchone()[0]
+        if user <1:
+            query = "SELECT COUNT(*) FROM admin AS a WHERE a.email = '{0}'".format(email)
+            admin = g.conn.execute(query).fetchone()[0]
+            if admin < 1:
                 return redirect('/wrong')
             else:
-                return render_template('user.html', **context)
+                return render_template('admin.html')
         else:
             query1="WITH tmp1(userid) AS (SELECT userid FROM Users WHERE email='{0}') SELECT M.Name FROM MOVIES AS M,(SELECT MC.mid FROM Movie_collection AS MC, tmp1 AS U WHERE U.userid=MC.userid) AS tmp WHERE M.mid=tmp.mid".format(email)
             cursor = g.conn.execute(query1)
@@ -78,6 +78,7 @@ def login():
             return render_template('user.html', **context)
 
     return render_template("login.html")
+
 @app.route('/add_collection',methods=('GET', 'POST'))
 def add_collection():
     if request.method == 'POST':
@@ -377,11 +378,54 @@ def star(name):
     cursor.close()
     return render_template("star.html", name=celebrityname, Detail=detail)
 
+@app.route('/add_movies')
+def add_movies():
+    if request.method == 'POST':
+        email = request.form['email']
+        movietitle=request.form['movie']
+        movieDetail = request.form["detail"]
+        movieStoryline = request.form["storyline"]
+        moviegenre = request.form['genre']
+        error=None
+
+        query1 = "SELECT COUNT(*) FROM Admin WHERE email = '{0}'".format(email)
+        query2 = "SELECT COUNT(*) FROM MOVIES WHERE Name = '{0}'".format(movietitle)
+        usercheck=g.conn.execute(query1).fetchone()[0]
+        moviecheck=g.conn.execute(query2).fetchone()[0]
+        if usercheck <1:
+            error = 'User is already registered.'
+            return render_template('wrong.html')
+        if moviecheck ==1:
+            error= 'Movie has been submitted.'
+            return render_template('moviesubmitted.html')
+        query3 = "SELECT COUNT(*) FROM MOVIES"
+        query4 = "SELECT mid FROM MOVIES WHERE Name = '{0}'".format(movietitle)
+
+        mid=0
+        aid=0
+        cursor = g.conn.execute(query3)
+        for result in cursor:
+            aid=result[0]
+        cursor.close()
+
+        cursor = g.conn.execute(query4)
+
+        for result in cursor:
+            mid=result[0]
+        cursor.close()
+        mid=mid+1
 
 
-@app.route('/admin')
-def admin():
-    return render_template("admin.html")
+        if error is None:
+            query5 = "INSERT INTO adjust_Movie (aid,mid) VALUES ('{0}','{1}')".format(aid,mid)
+            query6="INSERT INTO MOVIES (mid,Name,Details,Genre,Storyline) VALUES ('{0}','{1}',{2},{3},{4})".format(mid,movietitle,movieDetail,moviegenre,movieStoryline)
+            g.conn.execute(query5)
+            g.conn.execute(query6)
+
+            return redirect(request.referrer)
+    return render_template("add_movies.html")
+
+
 
 
 if __name__ == '__main__':
