@@ -160,9 +160,6 @@ def News():
     return render_template("news.html", **context)
 
 
-@app.route('/login')
-def login():
-  return render_template("login.html")
 @app.route('/user')
 def user():
   return render_template("user.html")
