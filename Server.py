@@ -454,7 +454,7 @@ def add_movies():
             mid=result[0]
         cursor.close()
         mid=mid+1
-
+        print(mid)
 
         if error is None:
             query5 = "INSERT INTO adjust_Movie (aid,mid) VALUES ('{0}','{1}')".format(aid,mid)
@@ -470,6 +470,7 @@ def add_celebrity():
     if request.method == 'POST':
         email = request.form['email']
         movietitle = request.form['movie']
+        print(movietitle)
         name = request.form["name"]
         detail = request.form["detail"]
         error=None
@@ -499,11 +500,11 @@ def add_celebrity():
         cursor.close()
         query5="SELECT mid FROM MOVIES WHERE Name='{0}'".format(movietitle)
         mid=0
-        cursor = g.conn.execute(query4)
+        cursor = g.conn.execute(query5)
         for result in cursor:
             mid = result[0]
         cursor.close()
-
+        print(mid)
         query6 = "SELECT COUNT(*) FROM MOVIES WHERE Name = '{0}'".format(movietitle)
         moviecheck = g.conn.execute(query6).fetchone()[0]
         if moviecheck<1:
