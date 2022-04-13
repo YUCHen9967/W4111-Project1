@@ -235,6 +235,9 @@ def rate():
         email = request.form['email']
         movietitle=request.form['movie']
         rate=request.form['rate']
+        print(type(rate))
+        rate=int(rate)
+        print(type(rate))
         error = None
         query1 = "SELECT COUNT(*) FROM Users WHERE email = '{0}'".format(email)
         query2 = "SELECT COUNT(*) FROM MOVIES WHERE Name = '{0}'".format(movietitle)
@@ -243,14 +246,14 @@ def rate():
         if usercheck <1:
             error = 'User is already registered.'
             return render_template('wrong.html')
-        if moviecheck ==1:
+        if moviecheck <1:
             error= 'Movie has been submitted.'
             return render_template('wronguser.html')
         if rate<1 or rate >10:
             error="wrong rate"
             return render_template('wrongrate.html')
         query3 = "SELECT mid FROM MOVIES WHERE Name='{0}'".format(movietitle)
-        query4 = "SELECT aid FROM Users WHERE email = '{0}'".format(email)
+        query4 = "SELECT userid FROM Users WHERE email = '{0}'".format(email)
         mid = 0
         userid = 0
         cursor = g.conn.execute(query4)
